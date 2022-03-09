@@ -1,0 +1,3 @@
+repository='external project URL'
+module='https://github.com/protocolbuffers/protobuf/archive/v3.13.0.tar.gz'
+tag='MD5=1a6274bc4a65b55a6fa70e264d796490'

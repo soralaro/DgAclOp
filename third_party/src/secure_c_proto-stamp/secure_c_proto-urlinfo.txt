@@ -1,0 +1,3 @@
+repository='external project URL'
+module='https://gitee.com/openeuler/libboundscheck/repository/archive/v1.1.10.tar.gz'
+tag=''
