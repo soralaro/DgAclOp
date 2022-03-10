@@ -1,7 +1,7 @@
-prefix=/home/vega/worker/acl_all/FaceAlign_OP2/third_party/src/protobuf_static
-exec_prefix=/home/vega/worker/acl_all/FaceAlign_OP2/third_party/src/protobuf_static
-libdir=/home/vega/worker/acl_all/FaceAlign_OP2/third_party/src/protobuf_static/lib
-includedir=/home/vega/worker/acl_all/FaceAlign_OP2/third_party/src/protobuf_static/include
+prefix=/home/vega/worker/DgAclOp/third_party/src/protobuf_static
+exec_prefix=/home/vega/worker/DgAclOp/third_party/src/protobuf_static
+libdir=/home/vega/worker/DgAclOp/third_party/src/protobuf_static/lib
+includedir=/home/vega/worker/DgAclOp/third_party/src/protobuf_static/include
 
 Name: Protocol Buffers
 Description: Google's Data Interchange Format

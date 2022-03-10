@@ -5,7 +5,7 @@ add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 message(STATUS "CMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}")
 message(STATUS "CMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}")
 
-project(opp)
+project(acl_opp)
 
 if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/cmake/config.cmake)
     include(${CMAKE_CURRENT_BINARY_DIR}/cmake/config.cmake)
