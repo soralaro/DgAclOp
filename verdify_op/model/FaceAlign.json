@@ -1,0 +1,59 @@
+[
+	{
+		"op":"FaceAlign",
+		"input_desc":[
+			{
+				"name": "image",
+				"format": "NHWC",
+				"type": "uint8",
+				"shape": [1, 720, 1280, 3]
+			},
+			{
+				"name":"keypoints",
+				"format": "ND",
+				"type": "float32",
+				"shape": [4, 10]
+			},
+			{
+				"name":"face_num",
+				"format": "ND",
+				"type": "int32",
+				"shape": [1,1]
+			}
+		],
+		"output_desc":[
+			{
+				"name":"aligned_image",
+				"format": "NHWC",
+				"type": "uint8",
+				"shape": [4, 112, 112, 3]
+			}
+		],
+		"attr":[
+			{
+				"name":"face_size",
+				"type":"list_int",
+				"value":[
+					112,
+					112
+				]
+			},
+			{
+				"name":"default_keypoint",
+				"type":"list_int",
+				"value":[
+					40,
+					45,
+					72,
+					45,
+					52,
+					65,
+					42,
+					82,
+					72,
+					82
+				]
+			}
+		]
+	}
+]
