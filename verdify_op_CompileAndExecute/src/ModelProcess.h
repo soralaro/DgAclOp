@@ -40,47 +40,39 @@ public:
 
     int ModelInference(std::vector<void *> &inputBufs, std::vector<size_t> &inputSizes, std::vector<void *> &ouputBufs,
         std::vector<size_t> &outputSizes, aclrtStream stream);
-    unsigned int getNumInput(){return 3;}
+    unsigned int getNumInput(){return 2;}
     unsigned int getInputSizeByIndex(int index){
         if(index==0) {
-           return image_shape_[0]*image_shape_[1]*image_shape_[2]*image_shape_[3]*sizeof(unsigned char);
+           return img_in_shape_[0]*img_in_shape_[1]*img_in_shape_[2]*img_in_shape_[3]*sizeof(unsigned char);
         } else if(index == 1){
-           return keypoints_shape_[0]*keypoints_shape_[1]*sizeof(float);
-        } else if(index == 2){
-           return face_num_shape_[0]* face_num_shape_[1] * sizeof(unsigned int);
+           return Trans_M_shape_[0]*Trans_M_shape_[1]*sizeof(float);
         }
         return 0;
     };
     unsigned int getNumOutput(){return 1;}
     unsigned int getOutputSizeByIndex(int index) {
         if(index==0){
-           return aligned_image_shape_[0]*aligned_image_shape_[1]*aligned_image_shape_[2]*aligned_image_shape_[3]*sizeof(unsigned char);
+           return img_out_shape_[0]*img_out_shape_[1]*img_out_shape_[2]*img_out_shape_[3]*sizeof(unsigned char);
         }
         return 0;
     }
     void GetInputDims(int index,aclmdlIODims &dims) {
         if(index==0) {
-            dims.dimCount = image_shape_.size();
-            dims.dims[0] = image_shape_[0];
-            dims.dims[1] = image_shape_[1];
-            dims.dims[2] = image_shape_[2];
-            dims.dims[3] = image_shape_[3];
+            dims.dimCount = img_in_shape_.size();
+            dims.dims[0] = img_in_shape_[0];
+            dims.dims[1] = img_in_shape_[1];
+            dims.dims[2] = img_in_shape_[2];
+            dims.dims[3] = img_in_shape_[3];
         }
         if(index==1) {
-            dims.dimCount = keypoints_shape_.size();
-            dims.dims[0] = keypoints_shape_[0];
-            dims.dims[1] = keypoints_shape_[1];
-        }
-        if(index==2) {
-            dims.dimCount = face_num_shape_.size();
-            dims.dims[0] = face_num_shape_[0];
-            dims.dims[1] = face_num_shape_[1];
+            dims.dimCount = Trans_M_shape_.size();
+            dims.dims[0] = Trans_M_shape_[0];
+            dims.dims[1] = Trans_M_shape_[1];
         }
     }
-    std::vector<int64_t> image_shape_ = {1, 720, 1280, 3};
-    std::vector<int64_t> keypoints_shape_ = {4, 10};
-    std::vector<int64_t> face_num_shape_ = {1,1};
-    std::vector<int64_t> aligned_image_shape_ = {4, 112, 112, 3};
+    std::vector<int64_t> img_in_shape_ = {1, 720, 1280, 3};
+    std::vector<int64_t> Trans_M_shape_ = {2, 3};
+    std::vector<int64_t> img_out_shape_ = {1, 112, 112, 3};
 private:
 };
 

@@ -122,20 +122,46 @@ int AclProcess::Process(Mat& img)
                         425.,215.,485.,210.,460.,245.,435.,275.,483.,270.,
                         786.,192.,840.,190.,815.,230.,790.,260.,840.,260.,
                         1165.,130.,1225.,130.,1195.,165.,1170.,195.,1215.,195.};
-    int32_t face_num = 4;
-    aclrtMemcpy(inputBuffers[1], inputSizes[1], keypoints, face_num * 10 * sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
-    aclrtMemcpy(inputBuffers[2], inputSizes[2], &face_num, sizeof(int32_t), ACL_MEMCPY_HOST_TO_DEVICE);
 
-    //forward
-    ret = m_modelProcess->ModelInference(inputBuffers, inputSizes, outputBuffers, outputSizes,stream_);
-    if (ret != ACL_ERROR_NONE) {
-        cout<<"model run faild.ret = "<< ret <<endl;
-        return ret;
+    int32_t face_num = 4;
+    std::vector<int64_t> default_keypoint={40,45,72,45,52,65,42,82,72,82};
+    std::vector<cv::Point2f> to_point;
+    for(int i=0;i<default_keypoint.size()/2;i++){
+       to_point.push_back(cv::Point2f(default_keypoint[2*i],default_keypoint[2*i+1]));
     }
-    //postprocess
-    cout << "begin postprocess"<<endl;
-    PostProcess(outputBuffers, outputSizes, face_num, 112, 112);
-    cout<<"model run success!"<<endl;
+    for(int i=0;i<face_num;i++) {
+        std::vector<cv::Point2f> from_point;
+        for(int j=0;j<to_point.size();j++){
+            from_point.push_back(cv::Point2f(keypoints[i*to_point.size()*2+2*j],keypoints[i*to_point.size()*2+2*j+1]));
+        }
+        cv::Mat trans_M_s = estimateAffine2D(from_point, to_point);
+        cv::Mat trans_M=cv::Mat(trans_M_s.size(),CV_32FC1);
+        trans_M.at<float>(0,0)=(float)trans_M_s.at<double >(0,0);
+        trans_M.at<float>(0,1)=(float)trans_M_s.at<double >(0,1);
+        trans_M.at<float>(0,2)=(float)trans_M_s.at<double>(0,2);
+        trans_M.at<float>(1,0)=(float)trans_M_s.at<double>(1,0);
+        trans_M.at<float>(1,1)=(float)trans_M_s.at<double>(1,1);
+        trans_M.at<float>(1,2)=(float)trans_M_s.at<double>(1,2);
+        printf(" %f \n",trans_M.at<float>(0,0));
+        printf(" %f \n",trans_M.at<float>(0,1));
+        printf(" %f \n",trans_M.at<float>(0,2));
+        printf(" %f \n",trans_M.at<float>(1,0));
+        printf(" %f \n",trans_M.at<float>(1,1));
+        printf(" %f \n",trans_M.at<float>(1,2));
+        std::cout <<"trans_M.rows "<<trans_M.rows<<" cols "<<trans_M.cols<<" step "<<trans_M.step[0]<<std::endl;
+        std::cout <<"inputSizes[1] "<<inputSizes[1]<<" trans_M.step[0]*trans_M.rows "<<trans_M.step[0]*trans_M.rows<<std::endl;
+        aclrtMemcpy(inputBuffers[1], inputSizes[1], trans_M.data, trans_M.step[0]*trans_M.rows, ACL_MEMCPY_HOST_TO_DEVICE);
+        //forward
+        ret = m_modelProcess->ModelInference(inputBuffers, inputSizes, outputBuffers, outputSizes, stream_);
+        if (ret != ACL_ERROR_NONE) {
+            cout << "model run faild.ret = " << ret << endl;
+            return ret;
+        }
+        //postprocess
+        cout << "begin postprocess" << endl;
+        PostProcess(outputBuffers, outputSizes, i, 112, 112);
+        cout << "model run success!" << endl;
+    }
     return ACL_ERROR_NONE;
 }
 
@@ -145,10 +171,8 @@ aclError AclProcess::PostProcess(std::vector<void *> outputBuffers, std::vector<
     aclrtMemcpy(host_data, outputSizes[0], outputBuffers[0], outputSizes[0], ACL_MEMCPY_DEVICE_TO_HOST);
     Mat aligned_img = Mat(width, height, CV_8UC3);
     char file_name[20];
-    for(int i = 0; i < face_num; i++){
-        aligned_img.data = ((uchar*)host_data) + i * 3 * width * height;
-        sprintf(file_name, "face_aligned_%d.jpg", i);
-        imwrite(file_name, aligned_img);
-    }
+    aligned_img.data = ((uchar*)host_data) ;
+    sprintf(file_name, "face_aligned_%d.jpg", face_num);
+    imwrite(file_name, aligned_img);
     return ACL_ERROR_NONE;
 }

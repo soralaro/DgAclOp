@@ -21,44 +21,44 @@ int ModelProcess::ModelInference(std::vector<void *> &inputBufs, std::vector<siz
 {
     cout << "ModelProcess:Begin to inference." << endl;
     aclmdlDataset *input = nullptr;
-    std::string op_type = "FaceAlign";
+    std::string op_type = "WarpAffine";
 
-    aclTensorDesc *image_desc = aclCreateTensorDesc(
-            ACL_INT8, image_shape_.size(), image_shape_.data(), ACL_FORMAT_NHWC);
-    aclTensorDesc *keypoints_desc = aclCreateTensorDesc(
-            ACL_FLOAT, keypoints_shape_.size(), keypoints_shape_.data(), ACL_FORMAT_ND);
-    aclTensorDesc *face_num_desc = aclCreateTensorDesc(
-            ACL_INT32, face_num_shape_.size(), face_num_shape_.data(), ACL_FORMAT_ND);
-    aclTensorDesc *aligned_image_desc = aclCreateTensorDesc(
-            ACL_INT8, aligned_image_shape_.size(), aligned_image_shape_.data(), ACL_FORMAT_ND);
-    std::vector<aclTensorDesc*> input_desc = {image_desc, keypoints_desc,face_num_desc};
-    std::vector<aclTensorDesc*> output_desc = {aligned_image_desc};
+    aclTensorDesc *img_in_desc = aclCreateTensorDesc(
+            ACL_INT8, img_in_shape_.size(), img_in_shape_.data(), ACL_FORMAT_NHWC);
+    aclTensorDesc *Trans_M_desc = aclCreateTensorDesc(
+            ACL_FLOAT, Trans_M_shape_.size(), Trans_M_shape_.data(), ACL_FORMAT_ND);
+    aclTensorDesc *img_out_desc = aclCreateTensorDesc(
+            ACL_INT8, img_out_shape_.size(), img_out_shape_.data(), ACL_FORMAT_NHWC);
+    std::vector<aclTensorDesc*> input_desc = {img_in_desc, Trans_M_desc};
+    std::vector<aclTensorDesc*> output_desc = {img_out_desc};
 
-    auto src_size = aclGetTensorDescSize(image_desc);
-    aclDataBuffer *image_buffer = aclCreateDataBuffer(inputBufs[0], src_size);
-    src_size = aclGetTensorDescSize(keypoints_desc);
-    aclDataBuffer *keypoints_buffer = aclCreateDataBuffer(inputBufs[1], src_size);
-    src_size = aclGetTensorDescSize(face_num_desc);
-    aclDataBuffer *face_num_buffer = aclCreateDataBuffer(inputBufs[2], src_size);
-    src_size = aclGetTensorDescSize(aligned_image_desc);
-    aclDataBuffer *aligned_image_buffer = aclCreateDataBuffer(ouputBufs[0], src_size);
+    auto src_size = aclGetTensorDescSize(img_in_desc);
+    aclDataBuffer *img_in_buffer = aclCreateDataBuffer(inputBufs[0], src_size);
+    src_size = aclGetTensorDescSize(Trans_M_desc);
+    aclDataBuffer *Trans_M_buffer = aclCreateDataBuffer(inputBufs[1], src_size);
+    src_size = aclGetTensorDescSize(img_out_desc);
+    aclDataBuffer *img_out_buffer = aclCreateDataBuffer(ouputBufs[0], src_size);
 
-    std::vector<aclDataBuffer*> input_buffer = {image_buffer, keypoints_buffer,face_num_buffer};
-    std::vector<aclDataBuffer*> output_buffer = {aligned_image_buffer};
+    std::vector<aclDataBuffer*> input_buffer = {img_in_buffer, Trans_M_buffer};
+    std::vector<aclDataBuffer*> output_buffer = {img_out_buffer};
     // Set OP attribute
     aclopAttr *op_attr = aclopCreateAttr();
-    std::vector<int64_t> face_size={112,112};
-    auto ret=aclopSetAttrListInt(op_attr, "face_size", 2, face_size.data());
+    std::vector<int64_t> img_in_size={0,0,img_in_shape_[2],img_in_shape_[1]};//x,y,w,h
+    auto ret=aclopSetAttrListInt(op_attr, "img_in_size", 4, img_in_size.data());
     if (ret != ACL_SUCCESS) {
-        cout<<"Failed to aclopSetAttrListInt face_size "<<endl;
+        cout<<"Failed to aclopSetAttrListInt img_in_size "<<endl;
     }
-    std::vector<int64_t> default_keypoint={40,45,72,45,52,65,42,82,72,82};
-    ret=aclopSetAttrListInt(op_attr, "default_keypoint", default_keypoint.size(), default_keypoint.data());
+    std::vector<int64_t> img_out_size={0,0,img_out_shape_[2],img_out_shape_[1]};//x,y,w,h
+    ret=aclopSetAttrListInt(op_attr, "img_out_size", 4, img_out_size.data());
     if (ret != ACL_SUCCESS) {
-        cout<<"Failed to aclopSetAttrListInt default_keypoint "<<endl;
+        cout<<"Failed to aclopSetAttrListInt img_out_size "<<endl;
     }
-
-    cout << "aclopCompileAndExecute start" << endl;
+    std::vector<int64_t> dst_size={112,112};
+    ret=aclopSetAttrListInt(op_attr, "dst_size", 2, dst_size.data());
+    if (ret != ACL_SUCCESS) {
+        cout<<"Failed to aclopSetAttrListInt dst_size "<<endl;
+    }
+    cout << op_type <<" aclopCompileAndExecute start" << endl;
     ret = aclopCompileAndExecute(
             op_type.c_str(),
             inputBufs.size(), input_desc.data(), input_buffer.data(),
@@ -68,16 +68,14 @@ int ModelProcess::ModelInference(std::vector<void *> &inputBufs, std::vector<siz
         cout<<"Failed to aclopCompileAndExecute "<<endl;
     }
     aclrtSynchronizeStream(stream);
-    cout << "aclopCompileAndExecute end" << endl;
-    aclDestroyDataBuffer(image_buffer);
-    aclDestroyDataBuffer(keypoints_buffer);
-    aclDestroyDataBuffer(face_num_buffer);
-    aclDestroyDataBuffer(aligned_image_buffer);
+    cout << op_type << " aclopCompileAndExecute end" << endl;
+    aclDestroyDataBuffer(img_in_buffer);
+    aclDestroyDataBuffer(Trans_M_buffer);
+    aclDestroyDataBuffer(img_out_buffer);
 
-    aclDestroyTensorDesc(image_desc);
-    aclDestroyTensorDesc(keypoints_desc);
-    aclDestroyTensorDesc(face_num_desc);
-    aclDestroyTensorDesc(aligned_image_desc);
+    aclDestroyTensorDesc(img_in_desc);
+    aclDestroyTensorDesc(Trans_M_desc);
+    aclDestroyTensorDesc(img_out_desc);
     return ACL_ERROR_NONE;
 }
 
