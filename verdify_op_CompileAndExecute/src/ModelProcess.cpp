@@ -55,7 +55,7 @@ int ModelProcess::ModelInference(std::vector<void *> &inputBufs, std::vector<siz
         cout<<"Failed to aclopSetAttrListInt img_out_size "<<endl;
     }
 
-    std::cout << op_type << " aclopExecuteV2 start " << op_compile <<" dst size "<<img_out_size[2]<< std::endl;
+    std::cout << op_type << " aclopExecuteV2 start " <<std::endl;
     ret = aclopExecuteV2(
             op_type.c_str(),
             inputBufs.size(),
