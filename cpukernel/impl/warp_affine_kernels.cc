@@ -7,11 +7,10 @@
 namespace  {
 const char *WARP_AFFINE = "WarpAffine";
 }
-
 namespace aicpu  {
 uint32_t WarpAffineCpuKernel::Compute(CpuKernelContext &ctx)
 {
-    return  0;
+
     Tensor *img_in_tensor = ctx.Input(0);
     if (img_in_tensor == nullptr) {
         return 1;
@@ -45,15 +44,6 @@ uint32_t WarpAffineCpuKernel::Compute(CpuKernelContext &ctx)
     if ( img_out_size.size() != 4){
         return 1;
     }
-    AttrValue* dst_size_attr = ctx.GetAttr("dst_size");
-    if ( dst_size_attr == nullptr){
-        return 1;
-    }
-    std::vector<int64_t> dst_size = dst_size_attr->GetListInt();
-    if ( dst_size.size() != 2){
-        return 1;
-    }
-
 
     std::shared_ptr<TensorShape> img_in_tensor_shape = img_in_tensor->GetTensorShape();
     std::vector<int64_t> img_in_shapes = img_in_tensor_shape->GetDimSizes(); //NHWC
@@ -78,14 +68,14 @@ uint32_t WarpAffineCpuKernel::Compute(CpuKernelContext &ctx)
     cv::Mat Trans_M=cv::Mat(trans_M_shapes[0],trans_M_shapes[1],CV_32FC1,(float *)trans_M_tensor->GetData());
 
     cv::Mat img_out = cv::Mat(img_out_shapes[1], img_out_shapes[2],CV_8UC3,(uchar*)img_out_tensor->GetData());
-    cv::Mat img_out_roi= img_in(cv::Rect(img_out_size[0],img_out_size[1],img_out_size[2],img_out_size[3]));
+    cv::Mat img_out_roi= img_out(cv::Rect(img_out_size[0],img_out_size[1],img_out_size[2],img_out_size[3]));
     if(img_in_roi.empty()||img_out_roi.empty()){
        return -1;
     }
     cv::warpAffine(img_in_roi,
                    img_out_roi,
                    Trans_M,
-                   cv::Size(dst_size[0],dst_size[1]),
+                   cv::Size(img_out_size[2],img_out_size[3]),
                    cv::INTER_LINEAR,
                    cv::BORDER_CONSTANT,
                    cv::Scalar(0,0,0));

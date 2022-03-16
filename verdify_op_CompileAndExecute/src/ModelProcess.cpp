@@ -49,26 +49,36 @@ int ModelProcess::ModelInference(std::vector<void *> &inputBufs, std::vector<siz
         cout<<"Failed to aclopSetAttrListInt img_in_size "<<endl;
     }
     std::vector<int64_t> img_out_size={0,0,img_out_shape_[2],img_out_shape_[1]};//x,y,w,h
+
     ret=aclopSetAttrListInt(op_attr, "img_out_size", 4, img_out_size.data());
     if (ret != ACL_SUCCESS) {
         cout<<"Failed to aclopSetAttrListInt img_out_size "<<endl;
     }
-    std::vector<int64_t> dst_size={112,112};
-    ret=aclopSetAttrListInt(op_attr, "dst_size", 2, dst_size.data());
-    if (ret != ACL_SUCCESS) {
-        cout<<"Failed to aclopSetAttrListInt dst_size "<<endl;
-    }
-    cout << op_type <<" aclopCompileAndExecute start" << endl;
-    ret = aclopCompileAndExecute(
+
+    std::cout << op_type << " aclopExecuteV2 start " << op_compile <<" dst size "<<img_out_size[2]<< std::endl;
+    ret = aclopExecuteV2(
             op_type.c_str(),
-            inputBufs.size(), input_desc.data(), input_buffer.data(),
-            ouputBufs.size(), output_desc.data(), output_buffer.data(),
-            op_attr, ACL_ENGINE_SYS, ACL_COMPILE_SYS, nullptr, stream);
+            inputBufs.size(),
+            input_desc.data(),
+            input_buffer.data(),
+            ouputBufs.size(),
+            output_desc.data(),
+            output_buffer.data(),
+            op_attr, stream);
     if (ret != ACL_SUCCESS) {
-        cout<<"Failed to aclopCompileAndExecute "<<endl;
+        cout << "Failed to aclopExecuteV2 " << endl;
+        cout << op_type << " aclopCompileAndExecute start" << endl;
+        ret = aclopCompileAndExecute(
+                op_type.c_str(),
+                inputBufs.size(), input_desc.data(), input_buffer.data(),
+                ouputBufs.size(), output_desc.data(), output_buffer.data(),
+                op_attr, ACL_ENGINE_SYS, ACL_COMPILE_SYS, nullptr, stream);
+        if (ret != ACL_SUCCESS) {
+            cout << "Failed to aclopCompileAndExecute " << endl;
+        }
     }
     aclrtSynchronizeStream(stream);
-    cout << op_type << " aclopCompileAndExecute end" << endl;
+    cout << op_type << " aclop end" << endl;
     aclDestroyDataBuffer(img_in_buffer);
     aclDestroyDataBuffer(Trans_M_buffer);
     aclDestroyDataBuffer(img_out_buffer);

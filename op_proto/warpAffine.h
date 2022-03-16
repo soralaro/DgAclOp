@@ -17,7 +17,6 @@ REG_OP(WarpAffine)
     .OUTPUT(img_out, TensorType({DT_UINT8}))
     .REQUIRED_ATTR(img_in_size, ListInt)
     .REQUIRED_ATTR(img_out_size, ListInt)
-    .REQUIRED_ATTR(dst_size, ListInt)
     .OP_END_FACTORY_REG(WarpAffine)
 }
 #endif //GE_OP_WARP_AFFINE_H
