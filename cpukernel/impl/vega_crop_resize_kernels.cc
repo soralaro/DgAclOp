@@ -47,6 +47,8 @@ namespace aicpu  {
         unsigned  int img_out_roi_h;
         unsigned  int img_in_type;
         unsigned  int img_out_type;
+        float mean[3];
+        float scale;
     }VegaCropResizeParam;
 uint32_t VegaCropResizeCpuKernel::Compute(CpuKernelContext &ctx)
 {
@@ -66,8 +68,16 @@ uint32_t VegaCropResizeCpuKernel::Compute(CpuKernelContext &ctx)
     VegaCropResizeParam *param = (VegaCropResizeParam *)param_tensor->GetData();
     unsigned char *img_in = (unsigned char *) param->img_in_addr;
     if(param->img_in_type == (unsigned int )NV12){
-
+        return 1;
     }
+    if(param->img_in_type == (unsigned int )BGRPacked){
+        cv::Mat img_in = cv::Mat(param->img_in_h, param->img_in_w,CV_8UC3,(uchar*)param->img_in_addr);
+        cv::Mat img_in_roi= img_in(cv::Rect(param->img_in_roi_x,param->img_in_roi_y,param->img_in_roi_w,param->img_in_roi_h));
+        cv::Mat img_out = cv::Mat(param->img_in_h, param->img_in_w,CV_8UC3,(uchar*)param->img_in_addr);
+        cv::Mat img_out_roi= img_out(cv::Rect(param->img_out_roi_x,param->img_out_roi_y,param->img_out_roi_w,param->img_out_roi_h));
+        cv::resize(img_in_roi, img_out_roi, img_out_roi.size(),0,0,cv::INTER_LINEAR);
+    }
+ 
     return 0;
 }
 
