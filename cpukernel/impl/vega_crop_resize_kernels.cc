@@ -50,24 +50,24 @@ namespace aicpu  {
     }VegaCropResizeParam;
 uint32_t VegaCropResizeCpuKernel::Compute(CpuKernelContext &ctx)
 {
-
     Tensor *data_in_tensor = ctx.Input(0);
     if (data_in_tensor == nullptr) {
         return 1;
     }
-
     Tensor *param_tensor = ctx.Input(1);
     if (param_tensor == nullptr) {
         return 1;
     }
-
     Tensor *data_out_tensor = ctx.Output(0);
     if (data_out_tensor == nullptr) {
         return 1;
     }
 
-    VegaCropResizeParam *param=(VegaCropResizeParam *)param_tensor->GetData();
+    VegaCropResizeParam *param = (VegaCropResizeParam *)param_tensor->GetData();
+    unsigned char *img_in = (unsigned char *) param->img_in_addr;
+    if(param->img_in_type == (unsigned int )NV12){
 
+    }
     return 0;
 }
 
