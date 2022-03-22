@@ -86,6 +86,7 @@ int ModelProcess::ModelInference(std::vector<void *> &inputBufs, std::vector<siz
     aclDestroyTensorDesc(img_in_desc);
     aclDestroyTensorDesc(Trans_M_desc);
     aclDestroyTensorDesc(img_out_desc);
+    aclopDestroyAttr(op_attr);
     return ACL_ERROR_NONE;
 }
 

@@ -50,6 +50,7 @@ namespace aicpu  {
         float mean[3];
         float scale;
     }VegaCropResizeParam;
+
 uint32_t VegaCropResizeCpuKernel::Compute(CpuKernelContext &ctx)
 {
     Tensor *data_in_tensor = ctx.Input(0);
@@ -66,19 +67,41 @@ uint32_t VegaCropResizeCpuKernel::Compute(CpuKernelContext &ctx)
     }
 
     VegaCropResizeParam *param = (VegaCropResizeParam *)param_tensor->GetData();
-    unsigned char *img_in = (unsigned char *) param->img_in_addr;
-    if(param->img_in_type == (unsigned int )NV12){
+
+    if(param->img_out_type != (unsigned int )BGRPacked){
         return 1;
     }
-    if(param->img_in_type == (unsigned int )BGRPacked){
+
+    unsigned char *img_in = (unsigned char *) param->img_in_addr;
+    if(param->img_in_type == (unsigned int )NV12){
+        cv::Mat bgr;
+        if(param->img_in_w==param->img_out_w&&param->img_in_h==param->img_out_h){
+            bgr=cv::Mat(param->img_out_h,param->img_out_w,CV_8UC3,(uchar*)param->img_out_addr);
+        }else{
+            bgr=cv::Mat(param->img_in_h,param->img_in_w,CV_8UC3);
+        }
+        cv::Size sz(param->img_in_w,param->img_in_h/2*3);
+        cv::Mat nv12=cv::Mat(sz, CV_8UC1, (uchar*)param->img_in_addr);
+        cv::cvtColor(nv12, bgr,cv::COLOR_YUV2BGR_NV12);
+        if(param->img_in_roi_w!=param->img_out_roi_w||param->img_in_roi_h!=param->img_out_roi_h){
+            cv::Mat img_in_roi= bgr(cv::Rect(param->img_in_roi_x,param->img_in_roi_y,param->img_in_roi_w,param->img_in_roi_h));
+            cv::Mat img_out = cv::Mat(param->img_in_h, param->img_in_w,CV_8UC3,(uchar*)param->img_in_addr);
+            cv::Mat img_out_roi= img_out(cv::Rect(param->img_out_roi_x,param->img_out_roi_y,param->img_out_roi_w,param->img_out_roi_h));
+            cv::resize(bgr, img_out_roi, img_out_roi.size(),0,0,cv::INTER_LINEAR);
+        }
+        return 0;
+    }
+
+    if(param->img_in_type == (unsigned int )BGRPacked && param->img_out_type == (unsigned int )BGRPacked){
         cv::Mat img_in = cv::Mat(param->img_in_h, param->img_in_w,CV_8UC3,(uchar*)param->img_in_addr);
         cv::Mat img_in_roi= img_in(cv::Rect(param->img_in_roi_x,param->img_in_roi_y,param->img_in_roi_w,param->img_in_roi_h));
         cv::Mat img_out = cv::Mat(param->img_in_h, param->img_in_w,CV_8UC3,(uchar*)param->img_in_addr);
         cv::Mat img_out_roi= img_out(cv::Rect(param->img_out_roi_x,param->img_out_roi_y,param->img_out_roi_w,param->img_out_roi_h));
         cv::resize(img_in_roi, img_out_roi, img_out_roi.size(),0,0,cv::INTER_LINEAR);
+        return 0;
     }
  
-    return 0;
+    return 1;
 }
 
 REGISTER_CPU_KERNEL(VEGA_CROP_RESIZE, VegaCropResizeCpuKernel);
