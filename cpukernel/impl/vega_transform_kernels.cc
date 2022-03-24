@@ -5,12 +5,16 @@
  */
 #include "vega_transform_kernels.h"
 #include "vega_type.h"
-#define   WARPA_FFINE 0
-#define   WARPA_PERSPECTIVE 1
+
 namespace  {
 const char *VEGA_TRANSFORM = "VegaTransform";
 }
 namespace aicpu  {
+    typedef enum{
+        warpa_ffine = 0,
+        warpa_perspective = 1
+    }TransType;
+
         typedef struct {
                 VegaMatrix in;
                 VegaMatrix out;
@@ -61,7 +65,7 @@ uint32_t VegaTransformCpuKernel::Compute(CpuKernelContext &ctx)
     if(img_in_roi.empty()||img_out_roi.empty()){
        return 1;
     }
-    if(param->type==WARPA_FFINE){
+    if(param->type==(unsigned  int )warpa_ffine){
         cv::warpAffine(img_in_roi,
             img_out_roi,
             Trans_M,
@@ -71,7 +75,7 @@ uint32_t VegaTransformCpuKernel::Compute(CpuKernelContext &ctx)
             cv::Scalar(0,0,0));
             return 0;
     }
-    if(param->type==WARPA_PERSPECTIVE){
+    if(param->type==(unsigned  int )warpa_perspective){
         cv::warpPerspective(img_in_roi, img_out_roi,Trans_M , cv::Size(param->out.roi_w,param->out.roi_h));
         return 0;
     }
