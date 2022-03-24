@@ -57,17 +57,8 @@ namespace aicpu  {
 
 uint32_t VegaCropResizeCpuKernel::Compute(CpuKernelContext &ctx)
 {
-    Tensor *data_in_tensor = ctx.Input(0);
-    if (data_in_tensor == nullptr) {
-        return 1;
-    }
-
-    Tensor *param_tensor = ctx.Input(1);
+    Tensor *param_tensor = ctx.Input(0);
     if (param_tensor == nullptr) {
-        return 1;
-    }
-    Tensor *data_out_tensor = ctx.Output(0);
-    if (data_out_tensor == nullptr) {
         return 1;
     }
 
@@ -115,9 +106,9 @@ uint32_t VegaCropResizeCpuKernel::Compute(CpuKernelContext &ctx)
     }
 
     if(param->img_in_type == (unsigned int )BGRPacked && param->img_out_type == (unsigned int )BGRPacked){
-        cv::Mat img_in = cv::Mat(param->img_in_h, param->img_in_w,CV_8UC3,(uchar*)param->img_in_addr);
+        cv::Mat img_in = cv::Mat(param->img_in_h, param->img_in_w,CV_8UC3,(uchar*)param->img_in_addr,param->img_in_stride_w);
         cv::Mat img_in_roi= img_in(cv::Rect(param->img_in_roi_x,param->img_in_roi_y,param->img_in_roi_w,param->img_in_roi_h));
-        cv::Mat img_out = cv::Mat(param->img_out_h, param->img_out_w,CV_8UC3,(uchar*)param->img_out_addr);
+        cv::Mat img_out = cv::Mat(param->img_out_h, param->img_out_w,CV_8UC3,(uchar*)param->img_out_addr,param->img_out_stride_w);
         cv::Mat img_out_roi= img_out(cv::Rect(param->img_out_roi_x,param->img_out_roi_y,param->img_out_roi_w,param->img_out_roi_h));
         cv::resize(img_in_roi, img_out_roi, img_out_roi.size(),0,0,cv::INTER_LINEAR);
         return 0;
