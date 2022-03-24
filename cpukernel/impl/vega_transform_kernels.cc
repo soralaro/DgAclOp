@@ -3,10 +3,12 @@
  * Copyright (c) Deepglint Co., Ltd. 2022. All rights reserved.
  * by zhenxiongchen@deepglint.com
  */
-#include "vega_warp_affine_kernels.h"
+#include "vega_transform_kernels.h"
 #include "vega_type.h"
+#define   WARPA_FFINE 0
+#define   WARPA_PERSPECTIVE 1
 namespace  {
-const char *VEGA_WARP_AFFINE = "VegaWarpAffine";
+const char *VEGA_TRANSFORM = "VegaTransform";
 }
 namespace aicpu  {
         typedef struct {
@@ -14,15 +16,16 @@ namespace aicpu  {
                 VegaMatrix out;
                 unsigned  int trans_m_size_w;
                 unsigned  int trans_m_size_h;
-                float trans_m[6];
-    }VegaWarpAffineParam;
-uint32_t VegaWarpAffineCpuKernel::Compute(CpuKernelContext &ctx)
+                unsigned  int type;
+                float trans_m[9];
+    }VegaTransParam;
+uint32_t VegaTransformCpuKernel::Compute(CpuKernelContext &ctx)
 {
     Tensor *param_tensor = ctx.Input(0);
     if (param_tensor == nullptr) {
         return 1;
     }
-    VegaWarpAffineParam *param = (VegaWarpAffineParam *)param_tensor->GetData();
+    VegaTransParam *param = (VegaTransParam *)param_tensor->GetData();
     if((param->in.type != (unsigned int )BGRPacked && param->in.type != (unsigned int )NV12)|| param->out.type != (unsigned int )BGRPacked){
         return 1;
     }
@@ -58,15 +61,22 @@ uint32_t VegaWarpAffineCpuKernel::Compute(CpuKernelContext &ctx)
     if(img_in_roi.empty()||img_out_roi.empty()){
        return 1;
     }
-    cv::warpAffine(img_in_roi,
-                   img_out_roi,
-                   Trans_M,
-                   cv::Size(param->out.roi_w,param->out.roi_h),
-                   cv::INTER_LINEAR,
-                   cv::BORDER_CONSTANT,
-                   cv::Scalar(0,0,0));
-    return 0;
+    if(param->type==WARPA_FFINE){
+        cv::warpAffine(img_in_roi,
+            img_out_roi,
+            Trans_M,
+            cv::Size(param->out.roi_w,param->out.roi_h),
+            cv::INTER_LINEAR,
+            cv::BORDER_CONSTANT,
+            cv::Scalar(0,0,0));
+            return 0;
+    }
+    if(param->type==WARPA_PERSPECTIVE){
+        cv::warpPerspective(img_in_roi, img_out_roi,Trans_M , cv::Size(param->out.roi_w,param->out.roi_h));
+        return 0;
+    }
+    return 1;
 }
 
-REGISTER_CPU_KERNEL(VEGA_WARP_AFFINE, VegaWarpAffineCpuKernel);
+REGISTER_CPU_KERNEL(VEGA_TRANSFORM, VegaTransformCpuKernel);
 } // namespace aicpu

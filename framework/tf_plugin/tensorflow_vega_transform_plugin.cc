@@ -13,13 +13,13 @@
 
 namespace domi {
 
-Status AutoMappingFnVegaWarpAffine(const google::protobuf::Message* op_src, ge::Operator& op) {
+Status AutoMappingFnVegaTransform(const google::protobuf::Message* op_src, ge::Operator& op) {
   return SUCCESS;
 }
 
-REGISTER_CUSTOM_OP("VegaWarpAffine")
+REGISTER_CUSTOM_OP("VegaTransform")
     .FrameworkType(TENSORFLOW)
-    .OriginOpType("VegaWarpAffine")
-    .ParseParamsFn(AutoMappingFnVegaWarpAffine)
+    .OriginOpType("VegaTransform")
+    .ParseParamsFn(AutoMappingFnVegaTransform)
     .ImplyType(ImplyType::TVM);
 }  // namespace domi
